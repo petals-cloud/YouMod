@@ -589,7 +589,7 @@ static NSString *getCompactQualityLabel(MLFormat *format) {
         return YMIsOverlayButtonEnabled(@"speed.video");
     };
     speedUp.onTap = ^(YTPlayerViewController *player, YTQTMButton *button) {
-        YMAdjustPlaybackRate(player, 0.025f);
+        YMAdjustPlaybackRate(player, 0.25f);
     };
     YMRegisterOverlayButton(speedUp);
     
@@ -617,7 +617,7 @@ static NSString *getCompactQualityLabel(MLFormat *format) {
         return YMIsOverlayButtonEnabled(@"speed.video");
     };
     speedDown.onTap = ^(YTPlayerViewController *player, YTQTMButton *button) {
-        YMAdjustPlaybackRate(player, -0.025f);
+        YMAdjustPlaybackRate(player, -0.25f);
     };
     YMRegisterOverlayButton(speedDown);
     YMOverlayButtonSpec *quality = [[YMOverlayButtonSpec alloc] init];
