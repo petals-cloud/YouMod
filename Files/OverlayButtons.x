@@ -11,7 +11,7 @@ static NSString *speedLabel(float rate) {
     NSNumberFormatter *formatter = [[NSNumberFormatter alloc] init];
     formatter.numberStyle = NSNumberFormatterDecimalStyle;
     formatter.minimumFractionDigits = 0;
-    formatter.maximumFractionDigits = 2;
+    formatter.maximumFractionDigits = 3;
     NSString *rateString = [formatter stringFromNumber:[NSNumber numberWithFloat:rate]];
     return [NSString stringWithFormat:@"%@x", rateString];
 }
@@ -20,6 +20,14 @@ static void didSelectRate(float rate) {
     currentPlaybackRate = rate;
     currentSpeedLabel = speedLabel(rate);
     [[NSNotificationCenter defaultCenter] postNotificationName:YouModUpdateSpeedLabel object:nil];
+}
+
+static void YMAdjustPlaybackRate(YTPlayerViewController *player, float delta) {
+    if (!player) return;
+
+    float rate = roundf(currentPlaybackRate * 1000.0f) / 1000.0f;
+    rate = fmaxf(0.25f, fminf(10.0f, rate + delta));
+    [player setPlaybackRate:rate];
 }
 
 @interface YTMainAppControlsOverlayView ()
@@ -571,6 +579,20 @@ static NSString *getCompactQualityLabel(MLFormat *format) {
         [button setImage:newIcon forState:UIControlStateNormal];
     };
     YMRegisterOverlayButton(mute);
+    YMOverlayButtonSpec *speedUp = [[YMOverlayButtonSpec alloc] init];
+    speedUp.identifier = @"speed.increase";
+    speedUp.symbolName = @"plus";
+    speedUp.settingsSymbolName = @"plus";
+    speedUp.displayName = @"Increase speed";
+    speedUp.sortOrder = 390;
+    speedUp.isVisible = ^BOOL(YTPlayerViewController *player) {
+        return YMIsOverlayButtonEnabled(@"speed.video");
+    };
+    speedUp.onTap = ^(YTPlayerViewController *player, YTQTMButton *button) {
+        YMAdjustPlaybackRate(player, 0.025f);
+    };
+    YMRegisterOverlayButton(speedUp);
+    
     YMOverlayButtonSpec *speed = [[YMOverlayButtonSpec alloc] init];
     speed.identifier = @"speed.video";
     speed.title = currentSpeedLabel;
@@ -581,13 +603,23 @@ static NSString *getCompactQualityLabel(MLFormat *format) {
         return YMIsOverlayButtonEnabled(@"speed.video");
     };
     speed.onTap = ^(YTPlayerViewController *player, YTQTMButton *button) {
-        YTMainAppVideoPlayerOverlayViewController *ovcon = [player activeVideoPlayerOverlay];
-        YTMainAppVideoPlayerOverlayView *ovview = [ovcon videoPlayerOverlayView];
-        YTMainAppControlsOverlayView *conview = [ovview controlsOverlayView];
-        [ovcon didPressVarispeed:button];
-        [conview updateSpeedButton:nil];
+        [player setPlaybackRate:1.0f];
     };
     YMRegisterOverlayButton(speed);
+    
+    YMOverlayButtonSpec *speedDown = [[YMOverlayButtonSpec alloc] init];
+    speedDown.identifier = @"speed.decrease";
+    speedDown.symbolName = @"minus";
+    speedDown.settingsSymbolName = @"minus";
+    speedDown.displayName = @"Decrease speed";
+    speedDown.sortOrder = 410;
+    speedDown.isVisible = ^BOOL(YTPlayerViewController *player) {
+        return YMIsOverlayButtonEnabled(@"speed.video");
+    };
+    speedDown.onTap = ^(YTPlayerViewController *player, YTQTMButton *button) {
+        YMAdjustPlaybackRate(player, -0.025f);
+    };
+    YMRegisterOverlayButton(speedDown);
     YMOverlayButtonSpec *quality = [[YMOverlayButtonSpec alloc] init];
     quality.identifier = @"quality.video";
     quality.title = currentQualityLabel;
